@@ -1,3 +1,5 @@
 ## Menubar-notes
 
-I was after quick way to jot down notes. I was using the default mac notes app but it was not fast enough. The apps present in the app store were either paid and if not, it did not provide the functionality I wanted so I decided to make my own.
+I needed a fast, accessible way to jot down notes. The default Mac Notes app was slow, and the available options were either missing features or required payment, so I decided to build my own.
+
+Built with Electron, Menubar-notes offers a fast, native desktop experience that sits right in your menubar for quick access. The rich text editor is powered by Quill.js, providing you with versatile formatting tools so you can easily jot down ideas, create lists, and format text just the way you like it.

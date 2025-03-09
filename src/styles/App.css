@@ -61,6 +61,7 @@ body {
   padding: 8px;
   background-color: var(--bg-color);
   border-top: 1px solid var(--border-color);
+  min-height: 10px;
 }
 
 .footer-actions {
@@ -351,4 +352,31 @@ body {
 .ql-editor > *:first-child {
   margin-top: 0 !important;
   padding-top: 0 !important;
+}
+
+/* Clear button styling */
+.clear-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  color: #999;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: absolute;
+  left: 0px;
+}
+
+.clear-button:hover {
+  background-color: var(--button-hover);
+  color: var(--accent-color);
+}
+
+.clear-button:active {
+  transform: scale(0.95);
 }

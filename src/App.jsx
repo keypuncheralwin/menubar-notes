@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Editor from './components/Editor';
+import { Trash2 } from 'react-feather'; 
 
 function App() {
   const [markdown, setMarkdown] = useState('');
@@ -59,6 +60,31 @@ function App() {
     }
   }, []);
 
+  // Function to clear the editor content
+  const handleClearEditor = useCallback(async () => {
+    // Confirm before clearing
+    const confirmClear = window.confirm('Are you sure you want to clear all content?');
+    
+    if (confirmClear) {
+      console.log('App: Clearing editor content');
+      setMarkdown('');
+      
+      // Save the empty content
+      if (window.electronAPI) {
+        try {
+          const result = await window.electronAPI.saveNote('');
+          if (result) {
+            setLastSaved(new Date().toLocaleTimeString());
+            console.log('App: Empty note saved at', new Date().toLocaleTimeString());
+          }
+        } catch (err) {
+          console.error('App: Error saving empty note:', err);
+          setEditorError(`Error clearing note: ${err.message}`);
+        }
+      }
+    }
+  }, []);
+
   // Show loading screen while notes are being loaded
   if (isLoading) {
     return (
@@ -72,6 +98,9 @@ function App() {
       </div>
     );
   }
+
+  // Check if there's content in the editor
+  const hasContent = markdown && markdown.trim() !== ''
 
   return (
     <div className="app">
@@ -94,20 +123,27 @@ function App() {
       </div>
       
       <div className="app-footer">
-        <div className="footer-actions" style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          width: '100%'
-        }}>
-          {lastSaved && 
-            <span style={{ 
-              fontSize: '11px', 
-              color: '#999',
-              textAlign: 'center'
-            }}>
-              Last saved: {lastSaved}
-            </span>
-          }
+        <div className="footer-actions">
+          {/* Show clear button if there's content */}
+          {hasContent && (
+            <button 
+              className="clear-button" 
+              onClick={handleClearEditor}
+              title="Clear all content"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+          
+          {/* Last saved information */}
+          <div style={{ 
+            flexGrow: 1, 
+            fontSize: '11px', 
+            color: '#999',
+            textAlign: 'center'
+          }}>
+            {lastSaved && `Last saved: ${lastSaved}`}
+          </div>
         </div>
       </div>
     </div>
