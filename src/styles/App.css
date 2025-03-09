@@ -69,6 +69,7 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
+  position: relative; /* For absolute positioning of clear button */
 }
 
 /* === ERROR BANNER === */
@@ -186,32 +187,78 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: none;
 }
 
 .ql-snow button:hover,
-.ql-snow button.ql-active {
-  background-color: var(--button-hover);
-  border-color: var(--border-color);
+.ql-snow button.ql-active,
+.ql-snow .ql-picker:hover,
+.ql-snow .ql-picker.ql-expanded {
+  background-color: transparent !important;
+  border-color: transparent !important;
 }
 
 .ql-snow button:hover .ql-stroke,
 .ql-snow button.ql-active .ql-stroke,
 .ql-toolbar.ql-snow button:hover .ql-stroke,
-.ql-toolbar.ql-snow button.ql-active .ql-stroke {
+.ql-toolbar.ql-snow button.ql-active .ql-stroke,
+.ql-snow .ql-picker:hover .ql-stroke,
+.ql-snow .ql-picker.ql-expanded .ql-stroke {
   stroke: var(--accent-color) !important;
+  transition: stroke 0.2s ease;
 }
 
 .ql-snow button:hover .ql-fill,
 .ql-snow button.ql-active .ql-fill,
 .ql-toolbar.ql-snow button:hover .ql-fill,
-.ql-toolbar.ql-snow button.ql-active .ql-fill {
+.ql-toolbar.ql-snow button.ql-active .ql-fill,
+.ql-snow .ql-picker:hover .ql-fill,
+.ql-snow .ql-picker.ql-expanded .ql-fill {
   fill: var(--accent-color) !important;
+  transition: fill 0.2s ease;
+}
+
+/* Specifically target color and background pickers */
+.ql-snow .ql-color-picker:hover,
+.ql-snow .ql-color-picker.ql-expanded,
+.ql-snow .ql-background:hover,
+.ql-snow .ql-background.ql-expanded {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+.ql-snow .ql-color-picker:hover .ql-stroke,
+.ql-snow .ql-color-picker.ql-expanded .ql-stroke,
+.ql-snow .ql-background:hover .ql-stroke,
+.ql-snow .ql-background.ql-expanded .ql-stroke {
+  stroke: var(--accent-color) !important;
+}
+
+.ql-snow .ql-color-picker:hover .ql-fill,
+.ql-snow .ql-color-picker.ql-expanded .ql-fill,
+.ql-snow .ql-background:hover .ql-fill,
+.ql-snow .ql-background.ql-expanded .ql-fill {
+  fill: var(--accent-color) !important;
+}
+
+/* Specifically target copy and paste buttons */
+.ql-snow .ql-copy:hover svg,
+.ql-snow .ql-paste:hover svg {
+  stroke: var(--accent-color) !important;
+  transition: stroke 0.2s ease;
+}
+
+/* Custom for svg stroke directly */
+.ql-snow button:hover svg[stroke],
+.ql-snow button.ql-active svg[stroke] {
+  stroke: var(--accent-color) !important;
 }
 
 .ql-snow .ql-picker-label:hover,
 .ql-snow .ql-picker-label.ql-active {
   color: var(--accent-color) !important;
-  border-color: var(--border-color);
+  border-color: transparent !important; /* Remove border highlight */
+  background-color: transparent !important;
 }
 
 .ql-snow .ql-picker-label:hover::before,
@@ -219,6 +266,12 @@ body {
   border-color: var(--accent-color) !important;
 }
 
+.ql-snow .ql-picker-options .ql-picker-item:hover {
+  background-color: var(--button-hover) !important;
+  color: var(--accent-color) !important;
+}
+
+/* Dropdown menu styling */
 .ql-snow .ql-picker-options {
   background-color: var(--dropdown-bg);
   border: 1px solid var(--border-color);
@@ -239,6 +292,15 @@ body {
 .ql-snow .ql-picker-item.ql-selected {
   color: var(--accent-color);
   background-color: var(--button-hover);
+}
+
+.ql-snow .ql-clean:hover svg {
+  stroke: var(--accent-color) !important;
+}
+
+.ql-color-picker .ql-picker-item:hover {
+  border-color: var(--accent-color) !important;
+  outline: none !important;
 }
 
 /* === EDITOR CONTENT AREA & STYLING === */
@@ -354,7 +416,6 @@ body {
   padding-top: 0 !important;
 }
 
-/* Clear button styling */
 .clear-button {
   display: flex;
   align-items: center;
@@ -367,13 +428,15 @@ body {
   border-radius: 4px;
   padding: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
   position: absolute;
-  left: 0px;
+  left: -8px;
 }
 
 .clear-button:hover {
-  background-color: var(--button-hover);
+  /* Remove background highlight on hover */
+  background-color: transparent;
+  /* Only change the icon color */
   color: var(--accent-color);
 }
 
