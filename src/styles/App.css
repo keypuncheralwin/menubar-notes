@@ -575,3 +575,28 @@ body {
   margin-left: 10px;
   cursor: pointer;
 }
+
+/* === TRANSITIONS === */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.editor-container {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.settings-container {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+/* Optimize animations for devices that prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in, .editor-container, .settings-container {
+    animation-duration: 0.1s;
+  }
+}

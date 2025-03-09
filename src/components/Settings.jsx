@@ -3,10 +3,11 @@ import { ArrowLeft } from 'react-feather';
 
 function Settings({ onBack }) {
   return (
-    <div className="settings-container">
+    <div className="settings-container fade-in">
       <div className="settings-header">
         <button className="back-button" onClick={onBack} title="Back to notes">
           <ArrowLeft size={18} />
+          <span>Back</span>
         </button>
         <div className="settings-title">Settings</div>
       </div>

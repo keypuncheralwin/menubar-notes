@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Editor from './components/Editor';
 import Settings from './components/Settings';
 import { Trash2, Settings as SettingsIcon } from 'react-feather'; 
@@ -8,7 +8,12 @@ function App() {
   const [editorError, setEditorError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState(null);
-  const [showSettings, setShowSettings] = useState(false); // New state for settings toggle
+  const [showSettings, setShowSettings] = useState(false);
+  const [editorKey, setEditorKey] = useState(Date.now());
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Refs to track current state for transitions
+  const currentViewRef = useRef('editor');
 
   useEffect(() => {
     // Load saved notes when the app starts
@@ -87,10 +92,26 @@ function App() {
     }
   }, []);
 
-  // Toggle settings view
-  const toggleSettings = useCallback(() => {
-    setShowSettings(prev => !prev);
-  }, []);
+  // Toggle settings view with smooth transition
+  const toggleSettings = useCallback((show) => {
+    // Set transitioning state for animation
+    setIsTransitioning(true);
+    
+    // Update the view after a short delay to allow animation
+    setTimeout(() => {
+      if (show === false && showSettings === true) {
+        // We're going back to the editor view, force a remount
+        setEditorKey(Date.now());
+        currentViewRef.current = 'editor';
+      } else {
+        currentViewRef.current = 'settings';
+      }
+      setShowSettings(show);
+      
+      // Reset transitioning state
+      setIsTransitioning(false);
+    }, 10); // Short delay to allow CSS transitions to take effect
+  }, [showSettings]);
 
   // Show loading screen while notes are being loaded
   if (isLoading) {
@@ -123,10 +144,14 @@ function App() {
       )}
       
       {showSettings ? (
-        <Settings onBack={() => setShowSettings(false)} />
+        <Settings 
+          onBack={() => toggleSettings(false)} 
+          className="fade-in" 
+        />
       ) : (
-        <div className="editor-container">
+        <div className="editor-container fade-in">
           <Editor 
+            key={editorKey}
             markdown={markdown} 
             onChange={handleMarkdownChange}
           />
@@ -159,7 +184,7 @@ function App() {
           {/* Settings button */}
           <button 
             className="settings-button" 
-            onClick={toggleSettings}
+            onClick={() => toggleSettings(!showSettings)}
             title={showSettings ? "Back to notes" : "Settings"}
           >
             <SettingsIcon size={14} />
