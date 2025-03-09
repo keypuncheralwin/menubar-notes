@@ -73,11 +73,7 @@ function Editor({ markdown, onChange }) {
         modules: {
           toolbar: {
             container: [
-              [{ 'header': [1, 2, 3, false] }],
-              ['bold', 'italic'],
-              [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-              ['blockquote', 'code-block'],
-              ['link', 'copy', 'paste']
+              ['paste','copy', { 'header': [1, 2, 3, false] },'bold', 'italic', 'underline', { 'list': 'ordered' }, { 'list': 'bullet' }, 'code-block', { 'color': [] }, { 'background': [] }, 'clean']
             ],
             handlers: {
               'copy': function() {

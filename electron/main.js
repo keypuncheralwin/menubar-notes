@@ -25,12 +25,12 @@ function createWindow() {
   
   // Create the browser window.
   window = new BrowserWindow({
-    width: 400,
-    height: 500,
+    width: 440,
+    height: 540,
     show: false,
     frame: false,
     fullscreenable: false,
-    resizable: false,
+    resizable: true,
     transparent: true,
     skipTaskbar: true,
     webPreferences: {
