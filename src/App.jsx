@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Editor from './components/Editor';
-import { Trash2 } from 'react-feather'; 
+import Settings from './components/Settings';
+import { Trash2, Settings as SettingsIcon } from 'react-feather'; 
 
 function App() {
   const [markdown, setMarkdown] = useState('');
   const [editorError, setEditorError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState(null);
+  const [showSettings, setShowSettings] = useState(false); // New state for settings toggle
 
   useEffect(() => {
     // Load saved notes when the app starts
@@ -85,6 +87,11 @@ function App() {
     }
   }, []);
 
+  // Toggle settings view
+  const toggleSettings = useCallback(() => {
+    setShowSettings(prev => !prev);
+  }, []);
+
   // Show loading screen while notes are being loaded
   if (isLoading) {
     return (
@@ -115,17 +122,21 @@ function App() {
         </div>
       )}
       
-      <div className="editor-container">
-        <Editor 
-          markdown={markdown} 
-          onChange={handleMarkdownChange}
-        />
-      </div>
+      {showSettings ? (
+        <Settings onBack={() => setShowSettings(false)} />
+      ) : (
+        <div className="editor-container">
+          <Editor 
+            markdown={markdown} 
+            onChange={handleMarkdownChange}
+          />
+        </div>
+      )}
       
       <div className="app-footer">
         <div className="footer-actions">
-          {/* Show clear button if there's content */}
-          {hasContent && (
+          {/* Show clear button if there's content and not in settings */}
+          {!showSettings && hasContent && (
             <button 
               className="clear-button" 
               onClick={handleClearEditor}
@@ -142,8 +153,17 @@ function App() {
             color: '#999',
             textAlign: 'center'
           }}>
-            {lastSaved && `Last saved: ${lastSaved}`}
+            {!showSettings && lastSaved && `Last saved: ${lastSaved}`}
           </div>
+          
+          {/* Settings button */}
+          <button 
+            className="settings-button" 
+            onClick={toggleSettings}
+            title={showSettings ? "Back to notes" : "Settings"}
+          >
+            <SettingsIcon size={14} />
+          </button>
         </div>
       </div>
     </div>
