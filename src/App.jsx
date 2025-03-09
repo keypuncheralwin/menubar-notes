@@ -63,7 +63,7 @@ function App() {
   // Function to clear the editor content
   const handleClearEditor = useCallback(async () => {
     // Confirm before clearing
-    const confirmClear = window.confirm('Are you sure you want to clear all content?');
+    const confirmClear = window.confirm('Are you sure you want to clear this note?');
     
     if (confirmClear) {
       console.log('App: Clearing editor content');
@@ -100,7 +100,7 @@ function App() {
   }
 
   // Check if there's content in the editor
-  const hasContent = markdown && markdown.trim() !== ''
+  const hasContent = !isEditorEmpty(markdown);
 
   return (
     <div className="app">
@@ -151,3 +151,18 @@ function App() {
 }
 
 export default App;
+
+const isEditorEmpty = (content) => {
+  if (!content) return true;
+  
+  const trimmed = content.trim();
+  
+  // Check for common Quill "empty" patterns
+  return (
+    trimmed === '' || 
+    trimmed === '<p><br></p>' || 
+    trimmed === '<p></p>' ||
+    trimmed === '<br>' ||
+    trimmed === '<p><br/></p>'
+  );
+};
