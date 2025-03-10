@@ -27,15 +27,15 @@
     flex: 1 !important; /* Added flex to take available space */
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important; /* Changed from visible to hidden */
+    overflow: hidden !important;
   }
   
   .ql-editor {
     padding: 25px 15px 15px 15px !important; /* Top padding increased to prevent toolbar overlap */
-    height: 100% !important; /* Fixed height calculation */
+    height: 100% !important;
     min-height: 200px !important;
-    flex: 1 !important; /* Added flex to take available space */
-    overflow-y: scroll !important; /* Changed from auto to scroll for consistency */
+    flex: 1 !important; 
+    overflow-y: scroll !important;
     color: var(--text-color);
     line-height: 1.5;
   }
@@ -133,4 +133,21 @@
   .ql-editor > *:first-child {
     margin-top: 0 !important;
     padding-top: 0 !important;
+  }
+  
+  /* Toolbar - keep visible and stable */
+  .ql-toolbar.ql-snow {
+    background-color: var(--toolbar-bg) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+  }
+  
+  /* Fix scrolling to ensure it doesn't get cut off */
+  .app {
+    overflow: hidden !important;
+  }
+  
+  .editor-container {
+    overflow: hidden !important;
   }

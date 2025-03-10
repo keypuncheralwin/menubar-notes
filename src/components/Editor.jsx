@@ -154,9 +154,12 @@ function Editor({ markdown, onChange }) {
                   // Try to get clipboard items which might have HTML content
                   navigator.clipboard.read()
                     .then(async clipboardItems => {
+                      let htmlFound = false;
+                      
                       for (const item of clipboardItems) {
                         // Check if HTML format is available
                         if (item.types.includes('text/html')) {
+                          htmlFound = true;
                           const htmlBlob = await item.getType('text/html');
                           const html = await htmlBlob.text();
                           
@@ -173,21 +176,26 @@ function Editor({ markdown, onChange }) {
                           
                           contentRef.current = quill.root.innerHTML;
                           onChangeRef.current(quill.root.innerHTML);
+                          
                           // Provide success feedback
                           showPasteSuccess();
                           
                           // Handle scroll position for paste at beginning
                           ensureTopContentVisible();
-                          
                           return; // Exit if we successfully pasted HTML
                         }
                       }
                       
-                      // If we get here, we didn't find HTML format, try plain text
-                      throw new Error('No HTML content found in clipboard');
+                      // If we get here, we didn't find HTML format, silently fall back to plain text
+                      if (!htmlFound) {
+                        console.log('No HTML content in clipboard, using plain text instead');
+                        return fallbackToPlainText();
+                      }
                     })
                     .catch(err => {
-                      console.error('Could not paste formatted content:', err);
+                      if (err.message !== 'No HTML content found in clipboard') {
+                        console.log('Using plain text paste:', err.message);
+                      }
                       
                       // Fall back to plain text
                       fallbackToPlainText();
@@ -197,7 +205,7 @@ function Editor({ markdown, onChange }) {
                   fallbackToPlainText();
                 }
               } catch (error) {
-                console.error('Paste failed:', error);
+                console.log('Paste handler fallback:', error);
                 fallbackToUserInput();
               }
               
@@ -230,7 +238,7 @@ function Editor({ markdown, onChange }) {
                     ensureTopContentVisible();
                   })
                   .catch(err => {
-                    console.error('Plain text paste failed:', err);
+                    console.error('Plain text paste fallback failed:', err);
                     fallbackToUserInput();
                   });
               }
@@ -350,51 +358,6 @@ function Editor({ markdown, onChange }) {
     // Register handler
     quill.on('text-change', handleTextChange);
     quill.textChangeHandler = handleTextChange;
-    
-    // Add additional CSS
-    const styleElement = document.createElement('style');
-    styleElement.textContent = `
-      /* Ensure minimum top padding on editor */
-      .ql-editor {
-        min-height: 200px !important;
-        padding-top: 25px !important;
-        overflow-y: scroll !important;
-      }
-      
-      /* Toolbar - keep visible and stable */
-      .ql-toolbar.ql-snow {
-        background-color: var(--toolbar-bg) !important;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 100 !important;
-      }
-      
-      /* Fix for editor container to ensure it can scroll */
-      .ql-container.ql-snow {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        height: calc(100% - 42px) !important;
-        overflow: hidden !important;
-      }
-      
-      /* Ensure editor takes available space and scrolls */
-      .ql-editor {
-        flex: 1 !important;
-        height: 100% !important;
-        overflow-y: scroll !important;
-      }
-
-      /* Fix scrolling to ensure it doesn't get cut off */
-      .app {
-        overflow: hidden !important;
-      }
-      
-      .editor-container {
-        overflow: hidden !important;
-      }
-    `;
-    document.head.appendChild(styleElement);
     
     // Run initialization functions
     enforceMinimumTopPadding();
