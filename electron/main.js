@@ -10,7 +10,9 @@ const store = new Store({
   name: 'menubar-notes',
   clearInvalidConfig: true, // Prevents errors with invalid configs
   defaults: {
-    notes: ''
+    notes: '',
+    theme: 'dark',
+    stickyWindow: false
   }
 });
 
@@ -53,10 +55,20 @@ function createWindow() {
     window.webContents.openDevTools({ mode: 'detach' });
   }
 
-  // Hide the window when it loses focus with animation
+  // Check sticky window setting and apply if needed
+  const isSticky = store.get('stickyWindow', false);
+  if (isSticky) {
+    window.setAlwaysOnTop(true, 'floating');
+    console.log('Window set to always-on-top based on saved preference');
+  }
+
+  // Hide the window when it loses focus with animation - only if not in sticky mode
   window.on('blur', () => {
-    // Only hide if the window is visible 
-    if (window.isVisible()) {
+    // Check if sticky mode is enabled
+    const isSticky = store.get('stickyWindow', false);
+    
+    // Only hide if the window is visible and not in sticky mode
+    if (window.isVisible() && !isSticky) {
       hideWindowWithAnimation();
     }
   });
@@ -211,6 +223,46 @@ ipcMain.handle('get-theme', () => {
   } catch (error) {
     console.error('Main: Error loading theme preference:', error);
     return 'dark'; // Default to dark on error
+  }
+});
+
+// Add handlers for sticky window preference
+ipcMain.handle('save-sticky-preference', (event, isSticky) => {
+  console.log('Main: save-sticky-preference event received:', isSticky);
+  try {
+    store.set('stickyWindow', isSticky);
+    console.log('Main: Sticky window preference saved successfully to', store.path);
+    return true;
+  } catch (error) {
+    console.error('Main: Error saving sticky window preference:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('get-sticky-preference', () => {
+  console.log('Main: get-sticky-preference event received');
+  try {
+    const isSticky = store.get('stickyWindow', false); // Default to false if not set
+    console.log('Main: Loaded sticky window preference:', isSticky);
+    return isSticky;
+  } catch (error) {
+    console.error('Main: Error loading sticky window preference:', error);
+    return false; // Default to false on error
+  }
+});
+
+ipcMain.handle('set-always-on-top', (event, shouldBeOnTop) => {
+  console.log('Main: set-always-on-top event received:', shouldBeOnTop);
+  try {
+    if (window) {
+      window.setAlwaysOnTop(shouldBeOnTop, 'floating');
+      console.log('Main: Window always-on-top set to:', shouldBeOnTop);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Main: Error setting window always-on-top:', error);
+    return false;
   }
 });
 

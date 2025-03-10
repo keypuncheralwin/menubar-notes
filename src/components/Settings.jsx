@@ -1,9 +1,44 @@
-import React, { useEffect } from 'react';
-import { ArrowLeft, Sun, Moon } from 'react-feather';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Sun, Moon, Lock, Unlock } from 'react-feather';
 import { useTheme } from './ThemeProvider';
+import ToggleSwitch from './ToggleSwitch';
 
 function Settings({ onBack }) {
   const { theme, toggleTheme } = useTheme();
+  const [isSticky, setIsSticky] = useState(false);
+  
+  // Load sticky preference when component mounts
+  useEffect(() => {
+    const loadStickyPreference = async () => {
+      if (window.electronAPI) {
+        try {
+          const stickyPreference = await window.electronAPI.getStickyPreference();
+          setIsSticky(stickyPreference);
+        } catch (error) {
+          console.error('Error loading sticky preference:', error);
+        }
+      }
+    };
+    
+    loadStickyPreference();
+  }, []);
+  
+  // Handle toggle of sticky window option
+  const handleStickyToggle = async () => {
+    const newStickyState = !isSticky;
+    setIsSticky(newStickyState);
+    
+    if (window.electronAPI) {
+      try {
+        // Save preference
+        await window.electronAPI.saveStickyPreference(newStickyState);
+        // Apply the setting immediately
+        await window.electronAPI.setAlwaysOnTop(newStickyState);
+      } catch (error) {
+        console.error('Error saving sticky preference:', error);
+      }
+    }
+  };
   
   return (
     <div className="settings-container fade-in">
@@ -20,28 +55,31 @@ function Settings({ onBack }) {
         <div className="settings-section">
           <h3>Appearance</h3>
           <div className="settings-option theme-toggle">
-            <div className="toggle-label-container">
-              <span className="toggle-text">Dark mode</span>
-              
-              <label className="switch">
-                <input 
-                  type="checkbox" 
-                  checked={theme === 'dark'}
-                  onChange={toggleTheme}
-                />
-                <span className="slider round">
-                  <span className="toggle-icon dark">
-                    <Moon size={14} />
-                  </span>
-                  <span className="toggle-icon light">
-                    <Sun size={14} />
-                  </span>
-                </span>
-              </label>
-            </div>
+            <ToggleSwitch 
+              isChecked={theme === 'dark'}
+              onToggle={toggleTheme}
+              label="Dark mode"
+              iconOn={<Moon size={14} />}
+              iconOff={<Sun size={14} />}
+            />
           </div>
         </div>
         
+        {/* Window behavior section with sticky toggle */}
+        <div className="settings-section">
+          <h3>Window Behavior</h3>
+          <div className="settings-option sticky-toggle">
+            <ToggleSwitch 
+              isChecked={isSticky}
+              onToggle={handleStickyToggle}
+              label="Sticky window (always on top)"
+              iconOn={<Lock size={14} />}
+              iconOff={<Unlock size={14} />}
+            />
+          </div>
+        </div>
+        
+        {/* Editor section */}
         <div className="settings-section">
           <h3>Editor</h3>
           <div className="settings-option">

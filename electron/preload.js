@@ -52,6 +52,43 @@ const getTheme = async () => {
   }
 };
 
+// Add functions for sticky window functionality
+const saveStickyPreference = async (isSticky) => {
+  console.log('Preload: saveStickyPreference called with:', isSticky);
+  try {
+    const result = await ipcRenderer.invoke('save-sticky-preference', isSticky);
+    console.log('Preload: saveStickyPreference result:', result);
+    return result;
+  } catch (error) {
+    console.error('Preload: Error in saveStickyPreference:', error);
+    throw error;
+  }
+};
+
+const getStickyPreference = async () => {
+  console.log('Preload: getStickyPreference called');
+  try {
+    const result = await ipcRenderer.invoke('get-sticky-preference');
+    console.log('Preload: getStickyPreference result:', result);
+    return result;
+  } catch (error) {
+    console.error('Preload: Error in getStickyPreference:', error);
+    throw error;
+  }
+};
+
+const setAlwaysOnTop = async (shouldBeOnTop) => {
+  console.log('Preload: setAlwaysOnTop called with:', shouldBeOnTop);
+  try {
+    const result = await ipcRenderer.invoke('set-always-on-top', shouldBeOnTop);
+    console.log('Preload: setAlwaysOnTop result:', result);
+    return result;
+  } catch (error) {
+    console.error('Preload: Error in setAlwaysOnTop:', error);
+    throw error;
+  }
+};
+
 const closeWindow = async () => {
   console.log('Preload: closeWindow called');
   try {
@@ -69,6 +106,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ping: () => ipcRenderer.invoke('ping'),
   saveTheme,
   getTheme,
+  saveStickyPreference,
+  getStickyPreference,
+  setAlwaysOnTop,
   closeWindow
 });
 
