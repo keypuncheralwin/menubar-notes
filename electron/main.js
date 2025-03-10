@@ -12,7 +12,10 @@ const store = new Store({
   defaults: {
     notes: '',
     theme: 'dark',
-    stickyWindow: false
+    stickyWindow: false,
+    draggableWindow: false,
+    resizableWindow: false,
+    windowPosition: null
   }
 });
 
@@ -55,12 +58,42 @@ function createWindow() {
     window.webContents.openDevTools({ mode: 'detach' });
   }
 
-  // Check sticky window setting and apply if needed
+  // Apply window behavior settings
+  // Sticky window (always on top)
   const isSticky = store.get('stickyWindow', false);
   if (isSticky) {
     window.setAlwaysOnTop(true, 'floating');
     console.log('Window set to always-on-top based on saved preference');
   }
+  
+  // Draggable window
+  const isDraggable = store.get('draggableWindow', false);
+  if (isDraggable) {
+    window.setMovable(true);
+    console.log('Window set to draggable based on saved preference');
+  } else {
+    window.setMovable(false);
+    console.log('Window set to non-draggable based on saved preference');
+  }
+  
+  // Resizable window
+  const isResizable = store.get('resizableWindow', false);
+  if (isResizable) {
+    window.setResizable(true);
+    console.log('Window set to resizable based on saved preference');
+  } else {
+    window.setResizable(false);
+    console.log('Window set to non-resizable based on saved preference');
+  }
+
+  // Listen for window position changes when dragged
+  window.on('moved', () => {
+    if (store.get('draggableWindow', false)) {
+      const position = window.getPosition();
+      store.set('windowPosition', position);
+      console.log('Window position saved:', position);
+    }
+  });
 
   // Hide the window when it loses focus with animation - only if not in sticky mode
   window.on('blur', () => {
@@ -87,34 +120,54 @@ const toggleWindow = () => {
 };
 
 const showWindow = () => {
-  // Position window directly below the tray icon
-  const trayBounds = tray.getBounds();
-  const windowBounds = window.getBounds();
+  // Check if we have a saved position and if draggable is enabled
+  const savedPosition = store.get('windowPosition');
+  const isDraggable = store.get('draggableWindow', false);
   
-  // Get display where tray icon is located
-  const displayForTray = screen.getDisplayMatching(trayBounds);
-  
-  // Position centered underneath the tray icon
-  let x = Math.round(trayBounds.x + (trayBounds.width / 2) - (windowBounds.width / 2));
-  let y = Math.round(trayBounds.y + trayBounds.height);
-  
-  // Make sure window is not positioned outside the screen where the tray is
-  if (x < displayForTray.bounds.x) x = displayForTray.bounds.x;
-  if (y < displayForTray.bounds.y) y = displayForTray.bounds.y;
-  if (x + windowBounds.width > displayForTray.bounds.x + displayForTray.bounds.width) {
-    x = displayForTray.bounds.x + displayForTray.bounds.width - windowBounds.width;
+  if (savedPosition && isDraggable) {
+    // Position window at the saved position
+    console.log('Using saved position:', savedPosition);
+    
+    // Set opacity to 0 before showing
+    window.setOpacity(0);
+    
+    // Position and show window
+    window.setPosition(savedPosition[0], savedPosition[1], false);
+    window.show();
+    window.focus();
+    
+    // Fade in animation
+    fadeWindowIn();
+  } else {
+    // Default positioning logic - position window below the tray icon
+    const trayBounds = tray.getBounds();
+    const windowBounds = window.getBounds();
+    
+    // Get display where tray icon is located
+    const displayForTray = screen.getDisplayMatching(trayBounds);
+    
+    // Position centered underneath the tray icon
+    let x = Math.round(trayBounds.x + (trayBounds.width / 2) - (windowBounds.width / 2));
+    let y = Math.round(trayBounds.y + trayBounds.height);
+    
+    // Make sure window is not positioned outside the screen where the tray is
+    if (x < displayForTray.bounds.x) x = displayForTray.bounds.x;
+    if (y < displayForTray.bounds.y) y = displayForTray.bounds.y;
+    if (x + windowBounds.width > displayForTray.bounds.x + displayForTray.bounds.width) {
+      x = displayForTray.bounds.x + displayForTray.bounds.width - windowBounds.width;
+    }
+    
+    // Set opacity to 0 before showing
+    window.setOpacity(0);
+    
+    // Position and show window
+    window.setPosition(x, y, false);
+    window.show();
+    window.focus();
+    
+    // Fade in animation
+    fadeWindowIn();
   }
-  
-  // Set opacity to 0 before showing
-  window.setOpacity(0);
-  
-  // Position and show window
-  window.setPosition(x, y, false);
-  window.show();
-  window.focus();
-  
-  // Fade in animation
-  fadeWindowIn();
 };
 
 const hideWindowWithAnimation = () => {
@@ -226,7 +279,8 @@ ipcMain.handle('get-theme', () => {
   }
 });
 
-// Add handlers for sticky window preference
+// Add handlers for window behavior preferences
+// Sticky window
 ipcMain.handle('save-sticky-preference', (event, isSticky) => {
   console.log('Main: save-sticky-preference event received:', isSticky);
   try {
@@ -262,6 +316,123 @@ ipcMain.handle('set-always-on-top', (event, shouldBeOnTop) => {
     return false;
   } catch (error) {
     console.error('Main: Error setting window always-on-top:', error);
+    return false;
+  }
+});
+
+// Draggable window
+ipcMain.handle('save-draggable-preference', (event, isDraggable) => {
+  console.log('Main: save-draggable-preference event received:', isDraggable);
+  try {
+    store.set('draggableWindow', isDraggable);
+    console.log('Main: Draggable window preference saved successfully to', store.path);
+    return true;
+  } catch (error) {
+    console.error('Main: Error saving draggable window preference:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('get-draggable-preference', () => {
+  console.log('Main: get-draggable-preference event received');
+  try {
+    const isDraggable = store.get('draggableWindow', false); // Default to false if not set
+    console.log('Main: Loaded draggable window preference:', isDraggable);
+    return isDraggable;
+  } catch (error) {
+    console.error('Main: Error loading draggable window preference:', error);
+    return false; // Default to false on error
+  }
+});
+
+ipcMain.handle('set-draggable', (event, shouldBeDraggable) => {
+  console.log('Main: set-draggable event received:', shouldBeDraggable);
+  try {
+    if (window) {
+      window.setMovable(shouldBeDraggable);
+      console.log('Main: Window draggable set to:', shouldBeDraggable);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Main: Error setting window draggable:', error);
+    return false;
+  }
+});
+
+// Resizable window
+ipcMain.handle('save-resizable-preference', (event, isResizable) => {
+  console.log('Main: save-resizable-preference event received:', isResizable);
+  try {
+    store.set('resizableWindow', isResizable);
+    console.log('Main: Resizable window preference saved successfully to', store.path);
+    return true;
+  } catch (error) {
+    console.error('Main: Error saving resizable window preference:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('get-resizable-preference', () => {
+  console.log('Main: get-resizable-preference event received');
+  try {
+    const isResizable = store.get('resizableWindow', false); // Default to false if not set
+    console.log('Main: Loaded resizable window preference:', isResizable);
+    return isResizable;
+  } catch (error) {
+    console.error('Main: Error loading resizable window preference:', error);
+    return false; // Default to false on error
+  }
+});
+
+ipcMain.handle('set-resizable', (event, shouldBeResizable) => {
+  console.log('Main: set-resizable event received:', shouldBeResizable);
+  try {
+    if (window) {
+      window.setResizable(shouldBeResizable);
+      console.log('Main: Window resizable set to:', shouldBeResizable);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Main: Error setting window resizable:', error);
+    return false;
+  }
+});
+
+// Add handler for resetting window position
+ipcMain.handle('reset-window-position', () => {
+  console.log('Main: reset-window-position event received');
+  try {
+    // Clear saved position
+    store.delete('windowPosition');
+    console.log('Main: Window position reset');
+    
+    // If window is visible, reposition it immediately
+    if (window && window.isVisible()) {
+      const trayBounds = tray.getBounds();
+      const windowBounds = window.getBounds();
+      
+      // Get display where tray icon is located
+      const displayForTray = screen.getDisplayMatching(trayBounds);
+      
+      // Position centered underneath the tray icon
+      let x = Math.round(trayBounds.x + (trayBounds.width / 2) - (windowBounds.width / 2));
+      let y = Math.round(trayBounds.y + trayBounds.height);
+      
+      // Make sure window is not positioned outside the screen
+      if (x < displayForTray.bounds.x) x = displayForTray.bounds.x;
+      if (y < displayForTray.bounds.y) y = displayForTray.bounds.y;
+      if (x + windowBounds.width > displayForTray.bounds.x + displayForTray.bounds.width) {
+        x = displayForTray.bounds.x + displayForTray.bounds.width - windowBounds.width;
+      }
+      
+      window.setPosition(x, y, false);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Main: Error resetting window position:', error);
     return false;
   }
 });
