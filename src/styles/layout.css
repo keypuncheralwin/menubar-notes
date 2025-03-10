@@ -18,6 +18,7 @@
     padding: 4px 10px;
     font-size: 12px;
     color: #888;
+    flex-shrink: 0; /* Prevent titlebar from shrinking */
   }
   
   .drag-region {
@@ -30,7 +31,8 @@
   .editor-container {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    flex: 1 1 auto;
+    min-height: 0; /* This is important for flex child to scroll properly */
     overflow: hidden;
   }
   
@@ -41,6 +43,7 @@
     background-color: var(--bg-color);
     border-top: 1px solid var(--border-color);
     min-height: 10px;
+    flex-shrink: 0; /* Prevent footer from shrinking */
   }
   
   .footer-actions {

@@ -12,6 +12,10 @@
     outline: none !important;
     border: none !important;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    position: relative;
   }
   
   /* === EDITOR CONTENT AREA & STYLING === */
@@ -19,16 +23,19 @@
     border: none !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 14px;
-    height: calc(100% - 42px) !important;
-    overflow: hidden !important;
+    height: calc(100% - 42px) !important; /* Fixed height calculation */
+    flex: 1 !important; /* Added flex to take available space */
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important; /* Changed from visible to hidden */
   }
   
   .ql-editor {
     padding: 25px 15px 15px 15px !important; /* Top padding increased to prevent toolbar overlap */
-    height: calc(100% - 42px) !important;
-    min-height: calc(100% - 42px) !important;
-    max-height: calc(100% - 42px) !important;
-    overflow-y: scroll !important;
+    height: 100% !important; /* Fixed height calculation */
+    min-height: 200px !important;
+    flex: 1 !important; /* Added flex to take available space */
+    overflow-y: scroll !important; /* Changed from auto to scroll for consistency */
     color: var(--text-color);
     line-height: 1.5;
   }

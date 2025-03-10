@@ -358,7 +358,7 @@ function Editor({ markdown, onChange }) {
       .ql-editor {
         min-height: 200px !important;
         padding-top: 25px !important;
-        overflow-y: auto !important;
+        overflow-y: scroll !important;
       }
       
       /* Toolbar - keep visible and stable */
@@ -366,7 +366,32 @@ function Editor({ markdown, onChange }) {
         background-color: var(--toolbar-bg) !important;
         position: sticky !important;
         top: 0 !important;
-        z-index: 10 !important;
+        z-index: 100 !important;
+      }
+      
+      /* Fix for editor container to ensure it can scroll */
+      .ql-container.ql-snow {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        height: calc(100% - 42px) !important;
+        overflow: hidden !important;
+      }
+      
+      /* Ensure editor takes available space and scrolls */
+      .ql-editor {
+        flex: 1 !important;
+        height: 100% !important;
+        overflow-y: scroll !important;
+      }
+
+      /* Fix scrolling to ensure it doesn't get cut off */
+      .app {
+        overflow: hidden !important;
+      }
+      
+      .editor-container {
+        overflow: hidden !important;
       }
     `;
     document.head.appendChild(styleElement);

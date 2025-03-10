@@ -2,7 +2,7 @@
 .ql-toolbar.ql-snow {
     position: sticky !important;
     top: 0 !important;
-    z-index: 10 !important;
+    z-index: 100 !important; /* Increased z-index */
     background-color: var(--toolbar-bg) !important;
     border: none !important;
     border-bottom: 1px solid var(--border-color) !important;
@@ -10,6 +10,7 @@
     box-shadow: none !important;
     min-height: 42px !important;
     padding: 8px !important;
+    width: 100% !important;
   }
   
   /* Base styling for toolbar elements */
@@ -171,21 +172,21 @@
     border-color: var(--accent-color) !important;
     outline: none !important;
   }
-
-
-/* SVG icons using currentColor */
-.ql-snow .ql-copy svg,
-.ql-snow .ql-paste svg {
-  stroke: var(--toolbar-icon) !important;
-  transition: stroke 0.3s ease;
-}
-
-/* Success check mark icons */
-.feather-check {
-  stroke: #00cc00 !important; /* Keep green for both themes */
-}
-
-/* Error icon */
-.feather-alert-circle {
-  stroke: #ff6666 !important; /* Keep red for both themes */
-}
+  
+  
+  /* SVG icons using currentColor */
+  .ql-snow .ql-copy svg,
+  .ql-snow .ql-paste svg {
+    stroke: var(--toolbar-icon) !important;
+    transition: stroke 0.3s ease;
+  }
+  
+  /* Success check mark icons */
+  .feather-check {
+    stroke: #00cc00 !important; /* Keep green for both themes */
+  }
+  
+  /* Error icon */
+  .feather-alert-circle {
+    stroke: #ff6666 !important; /* Keep red for both themes */
+  }
