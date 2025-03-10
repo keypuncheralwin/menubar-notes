@@ -1,24 +1,32 @@
-/* === TRANSITIONS === */
+/* === SIMPLIFIED ANIMATIONS === */
+
+/* Fade-in animation for non-screen elements */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
   
-  .fade-in {
+  /* Apply animations only to specific elements that need them */
+  .reset-buttons-container,
+  .reset-button,
+  .editor-loading,
+  .settings-section {
     animation: fadeIn 0.25s ease-in-out;
   }
   
-  .editor-container {
-    animation: fadeIn 0.25s ease-in-out;
+  /* Explicitly disable animations for containers */
+  .editor-container,
+  .settings-container,
+  .quill-container {
+    animation: none !important;
   }
   
-  .settings-container {
-    animation: fadeIn 0.25s ease-in-out;
-  }
-  
-  /* Optimize animations for devices that prefer reduced motion */
+  /* Faster animations for reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
-    .fade-in, .editor-container, .settings-container {
+    .reset-buttons-container,
+    .reset-button,
+    .editor-loading,
+    .settings-section {
       animation-duration: 0.1s;
     }
   }

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Sun, Moon, Lock, Unlock, Move, Maximize, Minimize, CornerRightDown } from 'react-feather';
 import { useTheme } from './ThemeProvider';
 import ToggleSwitch from './ToggleSwitch';
+import { useScreen, SCREENS } from './ScreenContext';
 
-function Settings({ onBack }) {
+function Settings() {
   const { theme, toggleTheme } = useTheme();
+  const { navigateTo } = useScreen();
   const [isSticky, setIsSticky] = useState(false);
   const [isDraggable, setIsDraggable] = useState(false);
   const [isResizable, setIsResizable] = useState(false);
@@ -132,7 +134,11 @@ function Settings({ onBack }) {
   return (
     <div className="settings-container fade-in">
       <div className="settings-header">
-        <button className="back-button" onClick={onBack} title="Back to notes">
+        <button 
+          className="back-button" 
+          onClick={() => navigateTo(SCREENS.EDITOR)} 
+          title="Back to notes"
+        >
           <ArrowLeft size={18} />
           <span>Back</span>
         </button>

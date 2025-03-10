@@ -1,407 +1,323 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
+import { useEditor } from './EditorContext';
 
-function Editor({ markdown, onChange }) {
+function Editor() {
+  const { markdown, setMarkdown, setLastSaved, setEditorError, setQuillInstance } = useEditor();
+
   const containerRef = useRef(null);
   const quillRef = useRef(null);
   const contentRef = useRef(markdown || '');
-  const onChangeRef = useRef(onChange);
   const [editorLoaded, setEditorLoaded] = useState(false);
+  const debouncedSaveRef = useRef(null);
 
-  // Update the onChangeRef when the onChange prop changes
-  useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
-
-  // Initialize Quill or reinitialize when remounted
-  useEffect(() => {
-    console.log('Editor: Initialization effect running');
-    
-    // Force a new initialization when the component is mounted
-    // This ensures quill is recreated when returning from settings
-    if (containerRef.current) {
-      initializeQuill();
+  // Save content to disk
+  const saveContent = useCallback(async (content) => {
+    if (window.electronAPI) {
+      try {
+        const result = await window.electronAPI.saveNote(content);
+        if (result) {
+          const timeString = new Date().toLocaleTimeString();
+          setLastSaved(timeString);
+        } else {
+          setEditorError('Failed to save note');
+        }
+      } catch (err) {
+        console.error('Error saving content:', err);
+        setEditorError(`Error saving note: ${err.message}`);
+      }
     }
-    
-    // Cleanup function
-    return () => {
-      cleanupQuill();
-    };
-  }, []); // Empty dependency array - run only on mount and unmount
+  }, [setLastSaved, setEditorError]);
 
-  // Function to create a new Quill instance with proper cleanup
-  const initializeQuill = () => {
-    // Clean up any existing instances first
-    cleanupQuill();
-    
-    // Ensure container is ready
-    if (!containerRef.current) {
-      console.log('Editor: Container not ready, cannot initialize');
-      return;
+  // Debounced save function
+  const debouncedSave = useCallback((content) => {
+    if (debouncedSaveRef.current) {
+      clearTimeout(debouncedSaveRef.current);
     }
-    
-    // Remove any existing Quill instances completely
+    debouncedSaveRef.current = setTimeout(() => {
+      saveContent(content);
+      debouncedSaveRef.current = null;
+    }, 500);
+  }, [saveContent]);
+
+  // Ensure the editor has at least 25px top padding
+  const enforceMinimumTopPadding = useCallback(() => {
+    const editorEl = document.querySelector('.ql-editor');
+    if (editorEl) {
+      const currentPadding = parseInt(window.getComputedStyle(editorEl).paddingTop) || 0;
+      if (currentPadding < 25) {
+        editorEl.style.paddingTop = '25px';
+      }
+    }
+  }, []);
+
+  // Ensure the top content is visible (scroll to top if near the start)
+  const ensureTopContentVisible = useCallback(() => {
+    setTimeout(() => {
+      const range = quillRef.current?.getSelection();
+      if (range && range.index < 10) {
+        const editorEl = document.querySelector('.ql-editor');
+        if (editorEl) {
+          editorEl.scrollTop = 0;
+        }
+      }
+      enforceMinimumTopPadding();
+    }, 10);
+  }, [enforceMinimumTopPadding]);
+
+  // Memoized handler for keyboard paste events
+  const handleKeyboardPaste = useCallback((e) => {
+    setTimeout(() => {
+      const quill = quillRef.current;
+      if (!quill) return;
+      const html = quill.root.innerHTML;
+      if (html !== contentRef.current) {
+        contentRef.current = html;
+        debouncedSave(html);
+      }
+      ensureTopContentVisible();
+    }, 10);
+  }, [debouncedSave, ensureTopContentVisible]);
+
+  // Memoized handler for text-change events
+  const handleTextChange = useCallback((delta, oldDelta, source) => {
+    if (source === 'user') {
+      const quill = quillRef.current;
+      if (!quill) return;
+      const content = quill.root.innerHTML;
+      if (content !== contentRef.current) {
+        contentRef.current = content;
+        debouncedSave(content);
+      }
+      enforceMinimumTopPadding();
+    }
+  }, [debouncedSave, enforceMinimumTopPadding]);
+
+  // Memoized handler for blur events
+  const handleBlur = useCallback(() => {
+    const quill = quillRef.current;
+    if (!quill) return;
+    const content = quill.root.innerHTML;
+    if (content !== markdown) {
+      setMarkdown(content);
+    }
+  }, [markdown, setMarkdown]);
+
+  // Initialize Quill and attach event listeners
+  const initializeQuill = useCallback(() => {
+    if (!containerRef.current) return;
+
+    // Remove any existing Quill toolbars from previous instances
     const existingToolbars = document.querySelectorAll('.ql-toolbar');
-    if (existingToolbars.length > 0) {
-      console.log(`Editor: Found ${existingToolbars.length} existing toolbars, removing them`);
-      existingToolbars.forEach(toolbar => toolbar.remove());
-    }
-    
-    // Reset the container by clearing its contents
+    existingToolbars.forEach(toolbar => toolbar.remove());
+
     containerRef.current.innerHTML = '';
-    
-    // Create a clean editor div inside our container
     const editorDiv = document.createElement('div');
     containerRef.current.appendChild(editorDiv);
-    
-    console.log('Editor: Creating new Quill instance');
-    
-    // Define custom icons for the toolbar
+
+    // Define custom toolbar icons
     const icons = Quill.import('ui/icons');
-    
-    // Add custom icons for copy and paste
     icons['copy'] = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-copy"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
     icons['paste'] = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clipboard"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
-    
-    // Create Quill instance on the fresh div
+
     const quill = new Quill(editorDiv, {
       theme: 'snow',
       modules: {
         toolbar: {
           container: [
-            ['paste','copy', { 'header': [1, 2, 3, false] },'bold', 'italic', { 'background': [] }, { 'color': [] }, 'clean', 'code-block', 'underline', { 'list': 'ordered' }, { 'list': 'bullet' }]
+            ['paste', 'copy', { 'header': [1, 2, 3, false] }, 'bold', 'italic', { 'background': [] }, { 'color': [] }, 'clean', 'code-block', 'underline', { 'list': 'ordered' }, { 'list': 'bullet' }]
           ],
           handlers: {
             'copy': function() {
               const range = quill.getSelection();
-              let text;
-              
-              if (range && range.length > 0) {
-                // If there's a selection, get the selected text
-                text = quill.getText(range.index, range.length);
-              } else {
-                // If no selection, copy the entire content
-                text = quill.getText();
-              }
-              
-              // Use the modern Clipboard API if available
+              let text = range && range.length > 0 ? quill.getText(range.index, range.length) : quill.getText();
               if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text)
                   .then(() => {
-                    console.log('Content copied to clipboard');
-                    
-                    // Show visual feedback
                     const copyBtn = document.querySelector('.ql-copy');
                     if (copyBtn) {
                       const originalHTML = copyBtn.innerHTML;
                       copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#00cc00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-                      setTimeout(() => {
-                        copyBtn.innerHTML = originalHTML;
-                      }, 1000);
+                      setTimeout(() => { copyBtn.innerHTML = originalHTML; }, 1000);
                     }
                   })
-                  .catch(err => {
-                    console.error('Error copying to clipboard:', err);
-                    
-                    // Fallback for browsers that deny clipboard permission
+                  .catch(() => {
                     alert('Could not copy text. Please use keyboard shortcut (Ctrl/Cmd+C).');
                   });
               } else {
-                // Fallback for older browsers (should be rare in modern environments)
                 try {
-                  // Create a temporary element for copying
                   const tempElement = document.createElement('textarea');
                   tempElement.value = text;
                   tempElement.setAttribute('readonly', '');
                   tempElement.style.position = 'absolute';
                   tempElement.style.left = '-9999px';
                   document.body.appendChild(tempElement);
-                  
-                  // Select and copy
                   tempElement.select();
                   const successful = document.execCommand('copy');
                   document.body.removeChild(tempElement);
-                  
                   if (successful) {
-                    console.log('Content copied using fallback method');
-                    
-                    // Show visual feedback
                     const copyBtn = document.querySelector('.ql-copy');
                     if (copyBtn) {
                       const originalHTML = copyBtn.innerHTML;
                       copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#00cc00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-                      setTimeout(() => {
-                        copyBtn.innerHTML = originalHTML;
-                      }, 1000);
+                      setTimeout(() => { copyBtn.innerHTML = originalHTML; }, 1000);
                     }
                   } else {
                     throw new Error('execCommand returned false');
                   }
                 } catch (err) {
-                  console.error('Fallback copy method failed:', err);
                   alert('Could not copy text. Please use keyboard shortcut (Ctrl/Cmd+C).');
                 }
               }
             },
             'paste': function() {
-              // Focus the editor
               quill.focus();
-              
               try {
-                // Check if we can access the clipboard with formatting
                 if (navigator.clipboard && navigator.clipboard.read) {
-                  // Try to get clipboard items which might have HTML content
-                  navigator.clipboard.read()
-                    .then(async clipboardItems => {
-                      let htmlFound = false;
-                      
-                      for (const item of clipboardItems) {
-                        // Check if HTML format is available
-                        if (item.types.includes('text/html')) {
-                          htmlFound = true;
-                          const htmlBlob = await item.getType('text/html');
-                          const html = await htmlBlob.text();
-                          
-                          // Get the current selection
-                          const range = quill.getSelection(true);
-                          
-                          // If there's a selection, delete it first
-                          if (range.length > 0) {
-                            quill.deleteText(range.index, range.length);
-                          }
-                          
-                          // Insert the HTML at the cursor position using Quill's clipboard
-                          quill.clipboard.dangerouslyPasteHTML(range.index, html);
-                          
-                          contentRef.current = quill.root.innerHTML;
-                          onChangeRef.current(quill.root.innerHTML);
-                          
-                          // Provide success feedback
-                          showPasteSuccess();
-                          
-                          // Handle scroll position for paste at beginning
-                          ensureTopContentVisible();
-                          return; // Exit if we successfully pasted HTML
+                  navigator.clipboard.read().then(async clipboardItems => {
+                    let htmlFound = false;
+                    for (const item of clipboardItems) {
+                      if (item.types.includes('text/html')) {
+                        htmlFound = true;
+                        const htmlBlob = await item.getType('text/html');
+                        const html = await htmlBlob.text();
+                        const range = quill.getSelection(true);
+                        if (range.length > 0) {
+                          quill.deleteText(range.index, range.length);
                         }
+                        quill.clipboard.dangerouslyPasteHTML(range.index, html);
+                        const newContent = quill.root.innerHTML;
+                        contentRef.current = newContent;
+                        debouncedSave(newContent);
+                        // Show paste success feedback
+                        const pasteBtn = document.querySelector('.ql-paste');
+                        if (pasteBtn) {
+                          const originalHTML = pasteBtn.innerHTML;
+                          pasteBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#00cc00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                          setTimeout(() => { pasteBtn.innerHTML = originalHTML; }, 1000);
+                        }
+                        ensureTopContentVisible();
+                        return;
                       }
-                      
-                      // If we get here, we didn't find HTML format, silently fall back to plain text
-                      if (!htmlFound) {
-                        console.log('No HTML content in clipboard, using plain text instead');
-                        return fallbackToPlainText();
-                      }
-                    })
-                    .catch(err => {
-                      if (err.message !== 'No HTML content found in clipboard') {
-                        console.log('Using plain text paste:', err.message);
-                      }
-                      
-                      // Fall back to plain text
+                    }
+                    if (!htmlFound) {
                       fallbackToPlainText();
-                    });
+                    }
+                  }).catch(() => { fallbackToPlainText(); });
                 } else {
-                  // Browser doesn't support clipboard.read(), use plain text fallback
                   fallbackToPlainText();
                 }
               } catch (error) {
-                console.log('Paste handler fallback:', error);
                 fallbackToUserInput();
               }
-              
-              // Function to fall back to plain text pasting
+
               function fallbackToPlainText() {
-                navigator.clipboard.readText()
-                  .then(text => {
-                    const range = quill.getSelection(true);
-                    
-                    if (range.length > 0) {
-                      quill.deleteText(range.index, range.length);
-                    }
-                    
-                    // Try to detect if this might be HTML
-                    if (text.trim().startsWith('<') && text.includes('>')) {
-                      // This might be HTML, try to paste it as HTML
-                      quill.clipboard.dangerouslyPasteHTML(range.index, text);
-                    } else {
-                      // Just insert as plain text
-                      quill.insertText(range.index, text);
-                    }
-                    
-                    // Save the content
-                    contentRef.current = quill.root.innerHTML;
-                    onChangeRef.current(quill.root.innerHTML);
-                    
-                    showPasteSuccess();
-                    
-                    // Handle scroll position for paste at beginning
-                    ensureTopContentVisible();
-                  })
-                  .catch(err => {
-                    console.error('Plain text paste fallback failed:', err);
-                    fallbackToUserInput();
-                  });
+                navigator.clipboard.readText().then(text => {
+                  const range = quill.getSelection(true);
+                  if (range.length > 0) {
+                    quill.deleteText(range.index, range.length);
+                  }
+                  if (text.trim().startsWith('<') && text.includes('>')) {
+                    quill.clipboard.dangerouslyPasteHTML(range.index, text);
+                  } else {
+                    quill.insertText(range.index, text);
+                  }
+                  const newContent = quill.root.innerHTML;
+                  contentRef.current = newContent;
+                  debouncedSave(newContent);
+                  const pasteBtn = document.querySelector('.ql-paste');
+                  if (pasteBtn) {
+                    const originalHTML = pasteBtn.innerHTML;
+                    pasteBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#00cc00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                    setTimeout(() => { pasteBtn.innerHTML = originalHTML; }, 1000);
+                  }
+                  ensureTopContentVisible();
+                }).catch(() => { fallbackToUserInput(); });
               }
-              
-              // Function to fall back to user input
+
               function fallbackToUserInput() {
-                // Show failure feedback
                 const pasteBtn = document.querySelector('.ql-paste');
                 if (pasteBtn) {
                   const originalHTML = pasteBtn.innerHTML;
                   pasteBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ff6666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-circle"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
-                  setTimeout(() => {
-                    pasteBtn.innerHTML = originalHTML;
-                  }, 1000);
+                  setTimeout(() => { pasteBtn.innerHTML = originalHTML; }, 1000);
                 }
-                
-                // Ask user to use keyboard shortcut
                 alert('Please use keyboard shortcut (Ctrl/Cmd+V) to paste with formatting.');
-              }
-              
-              // Function to show success feedback
-              function showPasteSuccess() {
-                const pasteBtn = document.querySelector('.ql-paste');
-                if (pasteBtn) {
-                  const originalHTML = pasteBtn.innerHTML;
-                  pasteBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#00cc00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-                  setTimeout(() => {
-                    pasteBtn.innerHTML = originalHTML;
-                  }, 1000);
-                }
               }
             }
           }
-        }
+        },
       },
-      placeholder: 'Write your notes here...',
-      scrollingContainer: 'html', // This can help with scroll handling
-    });
-    
-    // Function to ensure top content is visible
-    function ensureTopContentVisible() {
-      setTimeout(() => {
-        // Get cursor position
-        const range = quill.getSelection();
-        
-        // If the cursor is near the top (first few characters),
-        // ensure we're scrolled to the top
-        if (range && range.index < 10) {
-          const editor = document.querySelector('.ql-editor');
-          if (editor) {
-            editor.scrollTop = 0;
-          }
-        }
-        
-        // Force editor to show enough top padding
-        enforceMinimumTopPadding();
-      }, 10);
-    }
-    
-    // Function to ensure there's always enough top padding
-    function enforceMinimumTopPadding() {
-      const editor = document.querySelector('.ql-editor');
-      if (editor) {
-        const currentPadding = parseInt(window.getComputedStyle(editor).paddingTop) || 0;
-        
-        // Ensure there's at least 25px of top padding
-        if (currentPadding < 25) {
-          editor.style.paddingTop = '25px';
-        }
-      }
-    }
-    
-    // Handle keyboard paste events
-    const handleKeyboardPaste = function(e) {
-      // We don't need to prevent default - let Quill handle the paste
-      // But after the paste, we need to:
-      
-      // 1. Update our content reference
-      setTimeout(() => {
-        const html = quill.root.innerHTML;
-        if (html !== contentRef.current) {
-          contentRef.current = html;
-          onChangeRef.current(html);
-        }
-        
-        // 2. Make sure content doesn't overlap with toolbar
-        ensureTopContentVisible();
-      }, 10);
-    };
-    
-    // Add a native paste event listener
-    quill.root.addEventListener('paste', handleKeyboardPaste);
-    
-    // Set initial content if provided
-    if (markdown) {
-      console.log('Editor: Setting initial content');
-      quill.clipboard.dangerouslyPasteHTML(markdown);
-      contentRef.current = markdown;
-    }
-    
-    // Define text change handler
-    const handleTextChange = function(delta, oldDelta, source) {
-      if (source === 'user') {
-        const html = quill.root.innerHTML;
-        
-        // Only update if content actually changed
-        if (html !== contentRef.current) {
-          contentRef.current = html;
-          onChangeRef.current(html);
-        }
-        
-        // Ensure top padding is maintained
-        enforceMinimumTopPadding();
-      }
-    };
-    
-    // Register handler
-    quill.on('text-change', handleTextChange);
-    quill.textChangeHandler = handleTextChange;
-    
-    // Run initialization functions
-    enforceMinimumTopPadding();
-    
-    // Set references
-    quillRef.current = quill;
-    setEditorLoaded(true);
-    
-    console.log('Editor: Quill initialization complete');
-  };
+        placeholder: 'Write your notes here...',
+        scrollingContainer: 'html',
+      });
 
-  // Function to clean up the Quill instance
-  const cleanupQuill = () => {
-    if (quillRef.current) {
-      console.log('Editor: Cleaning up Quill instance');
-      
-      // Clean up event listeners
-      if (quillRef.current.pasteCleanup) {
-        quillRef.current.pasteCleanup();
+      // Attach memoized event listeners
+      quill.root.addEventListener('paste', handleKeyboardPaste);
+      quill.root.addEventListener('blur', handleBlur);
+      quill.on('text-change', handleTextChange);
+      enforceMinimumTopPadding();
+
+      if (markdown) {
+        quill.clipboard.dangerouslyPasteHTML(markdown);
+        contentRef.current = markdown;
       }
-      
-      if (quillRef.current.textChangeHandler) {
-        quillRef.current.off('text-change', quillRef.current.textChangeHandler);
+
+      quillRef.current = quill;
+      setQuillInstance(quill);
+      setEditorLoaded(true);
+    }, [
+      debouncedSave,
+      enforceMinimumTopPadding,
+      ensureTopContentVisible,
+      handleKeyboardPaste,
+      handleBlur,
+      handleTextChange,
+      markdown,
+      setQuillInstance,
+    ]);
+
+  // Cleanup event listeners reliably using memoized handlers
+  const cleanupQuill = useCallback(() => {
+    const quill = quillRef.current;
+    if (quill) {
+      quill.off('text-change', handleTextChange);
+      if (quill.root) {
+        quill.root.removeEventListener('paste', handleKeyboardPaste);
+        quill.root.removeEventListener('blur', handleBlur);
       }
-      
       quillRef.current = null;
     }
-  };
+  }, [handleKeyboardPaste, handleBlur, handleTextChange]);
 
-  // Update external content if it changes
+  useEffect(() => {
+    if (containerRef.current && !quillRef.current) {
+      initializeQuill();
+    }
+    return () => {
+      cleanupQuill();
+    };
+  }, [initializeQuill, cleanupQuill]);
+
   useEffect(() => {
     if (quillRef.current && editorLoaded && markdown !== contentRef.current) {
-      console.log('Editor: External content update detected');
+      const selection = quillRef.current.getSelection();
       quillRef.current.clipboard.dangerouslyPasteHTML(markdown);
       contentRef.current = markdown;
+      if (selection) {
+        const length = quillRef.current.getLength();
+        const index = Math.min(selection.index, length - 1);
+        setTimeout(() => {
+          quillRef.current.setSelection(index, 0);
+        }, 1);
+      }
     }
   }, [markdown, editorLoaded]);
 
   return (
     <div className="quill-container">
-      {!editorLoaded && (
-        <div className="editor-loading">Loading editor...</div>
-      )}
-      
+      {!editorLoaded && <div className="editor-loading">Loading editor...</div>}
       <div className="quill-editor-container" ref={containerRef}></div>
     </div>
   );

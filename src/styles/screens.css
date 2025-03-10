@@ -1,0 +1,113 @@
+/* === SIMPLIFIED SCREEN MANAGEMENT === */
+.screens-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  /* Basic screen styles */
+  .screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    
+    /* Default: hidden */
+    opacity: 0;
+    pointer-events: none;
+    
+    /* Simple transition */
+    transition: opacity 250ms ease;
+  }
+  
+  /* Active screen */
+  .screen.active {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 10;
+  }
+  
+  /* CRITICAL: Editor screen is visible by default */
+  #editor-screen {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 10;
+  }
+  
+  /* Editor container styles */
+  .editor-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  /* Settings container styles */
+  .settings-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  /* Toolbar fix */
+  .ql-toolbar.ql-snow {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 200 !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Editor content fixes */
+  .quill-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .quill-editor-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .ql-container.ql-snow {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    height: auto !important;
+    overflow: hidden !important;
+  }
+  
+  .ql-editor {
+    flex: 1 1 auto !important; 
+    overflow-y: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  
+  /* Settings content scroll */
+  .settings-content {
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .screen {
+      transition-duration: 120ms;
+    }
+  }
