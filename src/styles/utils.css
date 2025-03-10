@@ -1,0 +1,48 @@
+/* === ERROR BANNER === */
+.error-banner {
+    background-color: #ff6b6b33;
+    color: #ff6b6b;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    border-bottom: 1px solid #ff6b6b66;
+  }
+  
+  .error-banner button {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 5px;
+  }
+  
+  /* === LOADING INDICATORS === */
+  .editor-loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    flex: 1;
+  }
+  
+  .editor-loading {
+    padding: 20px;
+    text-align: center;
+    color: #aaa;
+    font-size: 14px;
+  }
+  
+  .editor-loading:after {
+    content: ".";
+    animation: dots 1.5s steps(5, end) infinite;
+  }
+  
+  @keyframes dots {
+    0%, 20% { content: "."; }
+    40% { content: ".."; }
+    60% { content: "..."; }
+    80%, 100% { content: ""; }
+  }
