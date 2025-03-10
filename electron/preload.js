@@ -28,12 +28,48 @@ const loadNote = async () => {
   }
 };
 
+const saveTheme = async (theme) => {
+  console.log('Preload: saveTheme called with:', theme);
+  try {
+    const result = await ipcRenderer.invoke('save-theme', theme);
+    console.log('Preload: saveTheme result:', result);
+    return result;
+  } catch (error) {
+    console.error('Preload: Error in saveTheme:', error);
+    throw error;
+  }
+};
+
+const getTheme = async () => {
+  console.log('Preload: getTheme called');
+  try {
+    const result = await ipcRenderer.invoke('get-theme');
+    console.log('Preload: getTheme result:', result);
+    return result;
+  } catch (error) {
+    console.error('Preload: Error in getTheme:', error);
+    throw error;
+  }
+};
+
+const closeWindow = async () => {
+  console.log('Preload: closeWindow called');
+  try {
+    await ipcRenderer.invoke('close-window');
+    console.log('Preload: Window close requested');
+  } catch (error) {
+    console.error('Preload: Error in closeWindow:', error);
+  }
+};
+
 // Expose the API to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
   saveNote,
   loadNote,
-  // Add a ping function to test basic IPC communication
-  ping: () => ipcRenderer.invoke('ping')
+  ping: () => ipcRenderer.invoke('ping'),
+  saveTheme,
+  getTheme,
+  closeWindow
 });
 
 console.log('Preload: electronAPI exposed');

@@ -1,5 +1,6 @@
 /* === VARIABLES AND BASE STYLES === */
 :root {
+    /* Dark theme (default) */
     --bg-color: #1e1e1e;
     --text-color: #e0e0e0;
     --accent-color: #4a90e2;
@@ -7,6 +8,35 @@
     --toolbar-bg: #252525;
     --button-hover: #444444;
     --dropdown-bg: #2a2a2a;
+    --code-bg: #2a2a2a;
+    --code-color: #ddd;
+    --quote-color: #aaa;
+    --error-bg: #ff6b6b33;
+    --error-color: #ff6b6b;
+    --error-border: #ff6b6b66;
+    --muted-text: #999;
+    --toolbar-icon: #d4d4d4;
+    --placeholder-color: #666;
+  }
+  
+  /* Light theme */
+  body.light-theme {
+    --bg-color: #f5f5f5;
+    --text-color: #333333;
+    --accent-color: #4a90e2;
+    --border-color: #e0e0e0;
+    --toolbar-bg: #f5f5f5;
+    --button-hover: #e8e8e8;
+    --dropdown-bg: #f8f8f8;
+    --code-bg: #f0f0f0;
+    --code-color: #333;
+    --quote-color: #666;
+    --error-bg: #ffebeb;
+    --error-color: #d32f2f;
+    --error-border: #ffcdd2;
+    --muted-text: #666;
+    --toolbar-icon: #555555;
+    --placeholder-color: #999;
   }
   
   body {
@@ -16,4 +46,17 @@
     background-color: transparent;
     color: var(--text-color);
     overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    opacity: 1;
+    transition: opacity 250ms ease-in-out;
+  }
+  
+  body.fade-out {
+    opacity: 0;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    body, body.fade-out {
+      transition-duration: 100ms;
+    }
   }

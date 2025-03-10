@@ -34,7 +34,7 @@
   }
   
   .ql-editor.ql-blank::before {
-    color: #666;
+    color: var(--placeholder-color);
     font-style: italic;
   }
   
@@ -78,8 +78,8 @@
   }
   
   .ql-editor pre.ql-syntax {
-    background-color: #2a2a2a;
-    color: #ddd;
+    background-color: var(--code-bg);
+    color: var(--code-color);
     overflow: visible;
     border-radius: 3px;
     padding: 10px;
@@ -87,8 +87,8 @@
   }
   
   .ql-editor code {
-    background-color: #2a2a2a;
-    color: #ddd;
+    background-color: var(--code-bg);
+    color: var(--code-color);
     border-radius: 3px;
     padding: 2px 4px;
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
@@ -98,7 +98,7 @@
     border-left: 4px solid var(--accent-color);
     padding-left: 10px;
     margin-left: 0;
-    color: #aaa;
+    color: var(--quote-color);
   }
   
   /* Scrollbar styling for .ql-editor */

@@ -53,9 +53,12 @@ function createWindow() {
     window.webContents.openDevTools({ mode: 'detach' });
   }
 
-  // Hide the window when it loses focus
+  // Hide the window when it loses focus with animation
   window.on('blur', () => {
-    window.hide();
+    // Only hide if the window is visible 
+    if (window.isVisible()) {
+      hideWindowWithAnimation();
+    }
   });
   
   window.webContents.on('did-finish-load', () => {
@@ -65,7 +68,7 @@ function createWindow() {
 
 const toggleWindow = () => {
   if (window.isVisible()) {
-    window.hide();
+    hideWindowWithAnimation();
   } else {
     showWindow();
   }
@@ -90,9 +93,64 @@ const showWindow = () => {
     x = displayForTray.bounds.x + displayForTray.bounds.width - windowBounds.width;
   }
   
+  // Set opacity to 0 before showing
+  window.setOpacity(0);
+  
+  // Position and show window
   window.setPosition(x, y, false);
   window.show();
   window.focus();
+  
+  // Fade in animation
+  fadeWindowIn();
+};
+
+const hideWindowWithAnimation = () => {
+  // Fade out and then hide
+  fadeWindowOut().then(() => {
+    window.hide();
+    // Reset opacity for next time
+    window.setOpacity(1);
+  });
+};
+
+// Fade in animation function
+const fadeWindowIn = () => {
+  let opacity = 0;
+  const targetOpacity = 1;
+  const step = 0.1;
+  const interval = 16; // ~60fps
+  
+  const fadeIn = setInterval(() => {
+    if (opacity >= targetOpacity) {
+      clearInterval(fadeIn);
+      window.setOpacity(targetOpacity);
+    } else {
+      opacity += step;
+      window.setOpacity(opacity);
+    }
+  }, interval);
+};
+
+// Fade out animation function
+const fadeWindowOut = () => {
+  return new Promise((resolve) => {
+    let opacity = 1;
+    const targetOpacity = 0;
+    const step = 0.1;
+    const interval = 16; // ~60fps
+    
+    const fadeOut = setInterval(() => {
+      if (opacity <= targetOpacity) {
+        clearInterval(fadeOut);
+        window.setOpacity(targetOpacity);
+        resolve();
+      } else {
+        opacity -= step;
+        window.setOpacity(opacity);
+      }
+    }, interval);
+  });
 };
 
 // Set up IPC handlers
@@ -132,9 +190,47 @@ ipcMain.handle('load-note', () => {
   }
 });
 
+ipcMain.handle('save-theme', (event, theme) => {
+  console.log('Main: save-theme event received:', theme);
+  try {
+    store.set('theme', theme);
+    console.log('Main: Theme preference saved successfully to', store.path);
+    return true;
+  } catch (error) {
+    console.error('Main: Error saving theme preference:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('get-theme', () => {
+  console.log('Main: get-theme event received');
+  try {
+    const theme = store.get('theme', 'dark'); // Default to dark if not set
+    console.log('Main: Loaded theme preference:', theme);
+    return theme;
+  } catch (error) {
+    console.error('Main: Error loading theme preference:', error);
+    return 'dark'; // Default to dark on error
+  }
+});
+
+// Add handler for window close
+ipcMain.handle('close-window', () => {
+  if (window && window.isVisible()) {
+    hideWindowWithAnimation();
+  }
+  return true;
+});
+
 app.whenReady().then(() => {
   console.log('App ready, initializing...');
   createWindow();
+  
+  // For smoother visual experience
+  window.once('ready-to-show', () => {
+    window.setOpacity(0);
+  });
+  
   if (process.platform === 'darwin') {
     app.setActivationPolicy('accessory');
   }

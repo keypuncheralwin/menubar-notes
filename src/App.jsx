@@ -41,6 +41,23 @@ function App() {
     loadNotes();
   }, []);
 
+  // Handle keyboard shortcuts (Escape to close)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (window.electronAPI && window.electronAPI.closeWindow) {
+          window.electronAPI.closeWindow();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handleMarkdownChange = useCallback(async (content) => {
     console.log('App: handleMarkdownChange called with content length:', content?.length || 0);
     setMarkdown(content);
@@ -94,19 +111,22 @@ function App() {
 
   // Toggle settings view with smooth transition
   const toggleSettings = useCallback((show) => {
+    // If show is undefined, toggle based on current state
+    const newShow = show === undefined ? !showSettings : show;
+    
     // Set transitioning state for animation
     setIsTransitioning(true);
     
     // Update the view after a short delay to allow animation
     setTimeout(() => {
-      if (show === false && showSettings === true) {
+      if (newShow === false && showSettings === true) {
         // We're going back to the editor view, force a remount
         setEditorKey(Date.now());
         currentViewRef.current = 'editor';
       } else {
         currentViewRef.current = 'settings';
       }
-      setShowSettings(show);
+      setShowSettings(newShow);
       
       // Reset transitioning state
       setIsTransitioning(false);
@@ -184,7 +204,7 @@ function App() {
           {/* Settings button */}
           <button 
             className="settings-button" 
-            onClick={() => toggleSettings(!showSettings)}
+            onClick={() => toggleSettings()}
             title={showSettings ? "Back to notes" : "Settings"}
           >
             <SettingsIcon size={14} />

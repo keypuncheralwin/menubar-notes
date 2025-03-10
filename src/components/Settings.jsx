@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft } from 'react-feather';
+import { ArrowLeft, Sun, Moon } from 'react-feather';
+import { useTheme } from './ThemeProvider';
 
 function Settings({ onBack }) {
+  const { theme, toggleTheme } = useTheme();
+  
   return (
     <div className="settings-container fade-in">
       <div className="settings-header">
@@ -13,13 +16,29 @@ function Settings({ onBack }) {
       </div>
       
       <div className="settings-content">
-        {/* Settings options will go here */}
+        {/* Appearance section with theme toggle */}
         <div className="settings-section">
           <h3>Appearance</h3>
-          <div className="settings-option">
-            <label>
-              <input type="checkbox" /> Dark mode
-            </label>
+          <div className="settings-option theme-toggle">
+            <div className="toggle-label-container">
+              <span className="toggle-text">Dark mode</span>
+              
+              <label className="switch">
+                <input 
+                  type="checkbox" 
+                  checked={theme === 'dark'}
+                  onChange={toggleTheme}
+                />
+                <span className="slider round">
+                  <span className="toggle-icon dark">
+                    <Moon size={14} />
+                  </span>
+                  <span className="toggle-icon light">
+                    <Sun size={14} />
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
         </div>
         

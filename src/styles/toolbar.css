@@ -15,21 +15,24 @@
   /* Base styling for toolbar elements */
   .ql-snow .ql-stroke,
   .ql-toolbar.ql-snow .ql-stroke {
-    stroke: #d4d4d4 !important;
+    stroke: var(--toolbar-icon) !important;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
     fill: none;
+    transition: stroke 0.3s ease;
   }
   
   .ql-snow .ql-fill,
   .ql-toolbar.ql-snow .ql-fill {
-    fill: #d4d4d4 !important;
+    fill: var(--toolbar-icon) !important;
+    transition: fill 0.3s ease;
   }
   
   /* Picker labels */
   .ql-snow .ql-picker-label {
-    color: #d4d4d4 !important;
+    color: var(--toolbar-icon) !important;
+    transition: color 0.3s ease;
     padding: 0 5px;
     border: 1px solid transparent;
     font-size: 13px;
@@ -39,7 +42,8 @@
   }
   
   .ql-snow .ql-picker-label::before {
-    border-color: #d4d4d4 !important;
+    border-color: var(--toolbar-icon) !important;
+    transition: border-color 0.3s ease;
   }
   
   /* Toolbar buttons */
@@ -148,7 +152,7 @@
   .ql-snow .ql-picker-item {
     display: block;
     padding: 5px 10px;
-    color: #aaa;
+    color: var(--text-color);
     font-size: 13px;
     cursor: pointer;
   }
@@ -167,3 +171,21 @@
     border-color: var(--accent-color) !important;
     outline: none !important;
   }
+
+
+/* SVG icons using currentColor */
+.ql-snow .ql-copy svg,
+.ql-snow .ql-paste svg {
+  stroke: var(--toolbar-icon) !important;
+  transition: stroke 0.3s ease;
+}
+
+/* Success check mark icons */
+.feather-check {
+  stroke: #00cc00 !important; /* Keep green for both themes */
+}
+
+/* Error icon */
+.feather-alert-circle {
+  stroke: #ff6666 !important; /* Keep red for both themes */
+}
