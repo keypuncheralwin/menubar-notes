@@ -342,8 +342,85 @@ input:not(:checked) + .slider .toggle-icon.light {
     font-size: 14px;
   }
 
-  /* Reset position button */
-.reset-position-button {
+/* Reset buttons container and row styling */
+.reset-buttons-container {
+    margin-top: 15px;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .reset-buttons-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap; /* Allow buttons to wrap on very small screens */
+  }
+  
+  /* Button fade animations */
+  .reset-button {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(5px); }
+  }
+  
+  /* Apply reduced motion settings if user prefers */
+  @media (prefers-reduced-motion: reduce) {
+    .reset-buttons-container,
+    .reset-button {
+      animation-duration: 0.1s;
+    }
+  }
+  
+  .reset-button {
+    display: flex;
+    align-items: center;
+    background-color: var(--border-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s, color 0.3s;
+    font-size: 13px;
+    flex: 1;
+    min-width: 140px;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .reset-button:hover {
+    background-color: var(--button-hover);
+  }
+  
+  .reset-button:active {
+    transform: scale(0.98);
+  }
+  
+  .reset-button svg {
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+  }
+  
+  /* Button feedback animation */
+  .button-feedback {
+    background-color: var(--accent-color) !important;
+    color: white !important;
+  }
+  
+  .button-feedback svg {
+    transform: rotate(360deg);
+    transition: transform 0.5s ease;
+  }
+
+  /* Remove the old reset-position button styles or update them */
+  .reset-position-button {
     display: flex;
     align-items: center;
     background-color: var(--border-color);
@@ -366,9 +443,4 @@ input:not(:checked) + .slider .toggle-icon.light {
   
   .reset-position-button svg {
     margin-right: 8px;
-  }
-  
-  /* Add some space above the reset button */
-  .reset-position {
-    margin-top: 15px;
   }

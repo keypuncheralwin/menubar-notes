@@ -177,6 +177,19 @@ const resetWindowPosition = async () => {
   }
 };
 
+// Add window size reset function
+const resetWindowSize = async () => {
+  console.log('Preload: resetWindowSize called');
+  try {
+    const result = await ipcRenderer.invoke('reset-window-size');
+    console.log('Preload: resetWindowSize result:', result);
+    return result;
+  } catch (error) {
+    console.error('Preload: Error in resetWindowSize:', error);
+    throw error;
+  }
+};
+
 const closeWindow = async () => {
   console.log('Preload: closeWindow called');
   try {
@@ -208,7 +221,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setResizable,
   // Window management
   closeWindow,
-  resetWindowPosition
+  resetWindowPosition,
+  resetWindowSize
 });
 
 console.log('Preload: electronAPI exposed');

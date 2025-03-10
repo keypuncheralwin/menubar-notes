@@ -85,13 +85,46 @@ function Settings({ onBack }) {
     }
   };
   
-  // Handle reset position button
+  // State to track button fade animations
+  const [positionFeedback, setPositionFeedback] = useState(false);
+  const [sizeFeedback, setSizeFeedback] = useState(false);
+  
+  // Handle reset position button with animation feedback
   const handleResetPosition = async () => {
     if (window.electronAPI) {
       try {
+        // Provide visual feedback
+        setPositionFeedback(true);
+        
+        // Reset after a short delay
+        setTimeout(() => {
+          setPositionFeedback(false);
+        }, 500);
+        
         await window.electronAPI.resetWindowPosition();
       } catch (error) {
         console.error('Error resetting window position:', error);
+        setPositionFeedback(false);
+      }
+    }
+  };
+  
+  // Handle reset size button with animation feedback
+  const handleResetSize = async () => {
+    if (window.electronAPI) {
+      try {
+        // Provide visual feedback
+        setSizeFeedback(true);
+        
+        // Reset after a short delay
+        setTimeout(() => {
+          setSizeFeedback(false);
+        }, 500);
+        
+        await window.electronAPI.resetWindowSize();
+      } catch (error) {
+        console.error('Error resetting window size:', error);
+        setSizeFeedback(false);
       }
     }
   };
@@ -152,38 +185,35 @@ function Settings({ onBack }) {
             />
           </div>
           
-          {/* Reset window position button - only show if draggable is enabled */}
-          {isDraggable && (
-            <div className="settings-option reset-position">
-              <button 
-                onClick={handleResetPosition}
-                className="reset-position-button"
-              >
-                <CornerRightDown size={14} />
-                <span>Reset window position</span>
-              </button>
+          {/* Reset buttons section - show when either draggable or resizable is enabled */}
+          {(isDraggable || isResizable) && (
+            <div className="settings-option reset-buttons-container">
+              <div className="reset-buttons-row">
+                {isDraggable && (
+                  <button 
+                    onClick={handleResetPosition}
+                    className={`reset-button ${positionFeedback ? 'button-feedback' : ''}`}
+                    disabled={positionFeedback}
+                  >
+                    <CornerRightDown size={14} />
+                    <span>{positionFeedback ? 'Position reset!' : 'Reset position'}</span>
+                  </button>
+                )}
+                
+                {isResizable && (
+                  <button 
+                    onClick={handleResetSize}
+                    className={`reset-button ${sizeFeedback ? 'button-feedback' : ''}`}
+                    disabled={sizeFeedback}
+                  >
+                    <Minimize size={14} />
+                    <span>{sizeFeedback ? 'Size reset!' : 'Reset size'}</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
-        </div>
-        
-        {/* Editor section */}
-        <div className="settings-section">
-          <h3>Editor</h3>
-          <div className="settings-option">
-            <label>
-              <input type="checkbox" defaultChecked /> Auto-save
-            </label>
-          </div>
-          <div className="settings-option">
-            <label>Font size:</label>
-            <select defaultValue="medium">
-              <option value="small">Small</option>
-              <option value="medium">Medium</option>
-              <option value="large">Large</option>
-            </select>
-          </div>
-        </div>
-        
+        </div>        
         <div className="settings-section">
           <h3>About</h3>
           <p>Menu Bar Notes v1.0.0</p>

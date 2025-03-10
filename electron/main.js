@@ -437,6 +437,23 @@ ipcMain.handle('reset-window-position', () => {
   }
 });
 
+// Add handler for resetting window size
+ipcMain.handle('reset-window-size', () => {
+  console.log('Main: reset-window-size event received');
+  try {
+    if (window) {
+      // Reset to default size (should match the initial size in createWindow function)
+      window.setSize(440, 540, false);
+      console.log('Main: Window size reset to default dimensions');
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Main: Error resetting window size:', error);
+    return false;
+  }
+});
+
 // Add handler for window close
 ipcMain.handle('close-window', () => {
   if (window && window.isVisible()) {
